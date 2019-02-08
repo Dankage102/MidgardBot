@@ -13,7 +13,23 @@ const api = [
   {ip: "51.68.213.93", port: "23083"} // AlphaZRPG
 ];
 
-const getApiURL = (ip, port) => `https://api.soldat.pl/v0/server/{ip}/{port}`
+const getApiURL = (ip, port) => `https://api.soldat.pl/v0/server/${ip}/${port}`
+
+const singleServer =  (ip, port, NumPlayers, MaxPlayers, CurrentMap) => {
+  return
+  ":flag_gb:**Midgard [CTF] #1**","**Address**: <soldat://"
+    + ip
+    + ":"
+    + port
+    + "> \n **Players:**  `"
+    + NumPlayers
+    + "/"
+    + MaxPlayers
+    + "`<:crouch:533700465670619197> **Map:**  `"
+    + CurrentMap
+    + "`:map:";
+}
+
 
 const client = new Discord.Client(); 
 
@@ -34,33 +50,43 @@ client.on("message", async message => {
 
   if(!command.startsWith(prefix)) return;
 
-  if(command === `${prefix}statusMID`){
-		update();
-		clearInterval(timeInterval);
-		timeInterval = setInterval(update,60000);
+  if(command === `${prefix}kek`){
+		// update();
+		// clearInterval(timeInterval);
+		// timeInterval = setInterval(update,60000);
+    status();
   }
 });
 
 async function status(){
-  const statuses = await Promise.all(api.map(({ip, port}) => {
-    return snekfetch.get(getApiURL(ip, port));
-  }))
-  
-	const embed = new Discord.RichEmbed()
-	  .setAuthor(client.user.username,client.user.avatarURL)
-	  .setColor(Math.floor(Math.random() * 16777214) + 1)
+  try {
+    const statuses = await Promise.all(
+      api.map(({ip, port}) => {
+        return snekfetch.get(getApiURL(ip, port));
+      })
+    )
 
-  statuses.forEach(({body: {NumPlayers, MaxPlayers, CurrentMap}}, i) => {
-    embed.addField(`:flag_gb:**Midgard [CTF] #1****Address**: <soldat://{api[i].ip}:api[i].port> \n **Players:**  \`{NumPlayers}/{MaxPlayers}\`<:crouch:533700465670619197> **Map:**  \`${CurrentMap}\`:map:`)
-  })
+    const embed = new Discord.RichEmbed()
+	        .setAuthor(client.user.username,client.user.avatarURL)
+	        .setColor(Math.floor(Math.random() * 16777214) + 1)
 
-  embed.setTimestamp(new Date());
+    statuses.forEach(({body: {NumPlayers, MaxPlayers, CurrentMap}}, i) => {
+      embed.addField(
+        singleServer(api[i].ip, api[i].port, NumPlayers, MaxPlayers, CurrentMap)
+      )
+    })
+
+    embed.setTimestamp(new Date());
+    
+	  client.channels.get(`542063413677916162`).send(embed);
+  } catch (e) {
+    console.log('error: ', e)
+  }
   
-	client.channels.get(`537011480973934592`).send(embed);
 }
 
 async function update(){
-	let fetched = await client.channels.get(`537011480973934592`).fetchMessages({limit: 10});
-	client.channels.get(`537011480973934592`).bulkDelete(fetched);
+	let fetched = await client.channels.get(`542063413677916162`).fetchMessages({limit: 10});
+	client.channels.get(`542063413677916162`).bulkDelete(fetched);
 	status();
 }
